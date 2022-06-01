@@ -10,7 +10,6 @@ from json import loads as jsnloads
 from subprocess import Popen, run as srun, check_output
 from time import sleep, time
 from threading import Thread, Lock
-from pyrogram import Client, enums
 from dotenv import load_dotenv
 
 faulthandler_enable()
@@ -53,7 +52,8 @@ except:
     SERVER_PORT = 80
 
 PORT = environ.get('PORT', SERVER_PORT)
-alive = Popen(["python3", "alive.py"])
+Popen([f"gunicorn web.wserver:app --bind 0.0.0.0:{PORT}"], shell=True)
+srun(["qbittorrent-nox", "-d", "--profile=."])
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])
 srun(["cp", ".netrc", "/root/.netrc"])
@@ -142,17 +142,12 @@ except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
-LOGGER.info("Generating BOT_STRING_SESSION")
-app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, no_updates=True)
-
 try:
     USER_STRING_SESSION = getConfig('USER_STRING_SESSION')
     if len(USER_STRING_SESSION) == 0:
         raise KeyError
-    rss_session = Client(name='rss_session', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_STRING_SESSION, parse_mode=enums.ParseMode.HTML)
 except:
     USER_STRING_SESSION = None
-    rss_session = None
 
 def aria2c_init():
     try:
